@@ -8,6 +8,10 @@ from src.charts.geographical_map import create_geographical_map
 from src.charts.parallel_coordinates import create_parallel_coordinates
 from src.ml import FEATURES, run_kmeans, run_price_regression, summarize_clusters
 
+from src.charts.treemap_chart import create_treemap
+from src.charts.violin_chart import create_violin_plot
+from src.charts.bar_chart import create_top_neighborhoods_bar
+
 # Page configuration
 st.set_page_config(
     page_title="NYC Airbnb Dashboard",
@@ -60,7 +64,11 @@ with st.sidebar:
         ("map", "Geographical Map", ":material/map:"),
         ("parallel", "Parallel Coordinates", ":material/monitoring:"),
         ("clustering", "K-Means Clustering", ":material/hub:"),
-        ("regression", "Price Regression", ":material/trending_up:")
+        ("regression", "Price Regression", ":material/trending_up:"),
+        # Yeni eklenen sayfalar
+        ("treemap", "Treemap", ":material/account_tree:"),
+        ("violin", "Violin Plot", ":material/analytics:"),
+        ("bar", "Top Neighborhoods", ":material/bar_chart:")
     ]
 
     for page_id, label, icon in pages:
@@ -421,3 +429,34 @@ elif st.session_state.page == "regression":
             "Changing the sidebar filters retrains the model on the selected data. "
             "The maximum price filter also limits the prices included in training and testing."
         )
+
+# ----------------------
+# NEW VISUALIZATIONS
+# ----------------------
+
+elif st.session_state.page == "treemap":
+    st.title("🌳 Treemap")
+    st.write("Explore the hierarchical distribution of listings and average prices.")
+    
+    if filtered_df.empty:
+        st.warning("No listings match the selected filters.")
+    else:
+        st.plotly_chart(create_treemap(filtered_df), use_container_width=True)
+
+elif st.session_state.page == "violin":
+    st.title("🎻 Price Density (Violin Plot)")
+    st.write("Compare price distributions across boroughs and room types.")
+    
+    if filtered_df.empty:
+        st.warning("No listings match the selected filters.")
+    else:
+        st.plotly_chart(create_violin_plot(filtered_df), use_container_width=True)
+
+elif st.session_state.page == "bar":
+    st.title("📊 Top Neighborhoods")
+    st.write("View the top 15 most reviewed neighborhoods and their average prices.")
+    
+    if filtered_df.empty:
+        st.warning("No listings match the selected filters.")
+    else:
+        st.plotly_chart(create_top_neighborhoods_bar(filtered_df), use_container_width=True)
