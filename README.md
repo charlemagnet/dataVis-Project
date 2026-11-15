@@ -206,11 +206,9 @@ python src/preprocessing.py  # create data/processed/airbnb_cleaned.csv
 
 | Member | Student ID | Contributions |
 |---|---|---|
-| **[Full Name]** (GitHub: `Bar`) | [ID] | Dataset selection & download script, data exploration, data preprocessing (missing values, outlier detection), dashboard layout & sidebar navigation, global filters, **Sankey Diagram**, **Geographical Map**, **Parallel Coordinates**, K-Means clustering, price regression |
-| **[Full Name]** (GitHub: `Samet`) | [ID] | **Treemap**, **Violin Plot**, **Top Neighbourhoods Bar Chart** |
-| **Mehmet Uysal** (GitHub: `muysal0`) | [ID] | **Host Portfolio Analysis**, **Neighbourhood Price vs Demand bubble chart**, **Correlation Heatmap**, README |
-| [Name] | – | One-page report, presentation slides |
-
+| **Barış Kayırtar** (GitHub: `charlemagnet`)  Dataset selection & download script, data exploration, data preprocessing (missing values, outlier detection), dashboard layout & sidebar navigation, global filters, **Sankey Diagram**, **Geographical Map**, **Parallel Coordinates**, K-Means clustering, price regression |
+| **Samet Faruk Ziyan** (GitHub: `Magosaant`) **Treemap**, **Violin Plot**, **Top Neighbourhoods Bar Chart** |
+| **Mehmet Uysal** (GitHub: `muysal0`) **Host Portfolio Analysis**, **Neighbourhood Price vs Demand bubble chart**, **Correlation Heatmap** |
 ---
 
 ## 📜 License & Data
