@@ -11,6 +11,9 @@ from src.ml import FEATURES, run_kmeans, run_price_regression, summarize_cluster
 from src.charts.treemap_chart import create_treemap
 from src.charts.violin_chart import create_violin_plot
 from src.charts.bar_chart import create_top_neighborhoods_bar
+from src.charts.host_portfolio import create_host_portfolio_chart, summarize_host_types
+from src.charts.price_demand_bubble import DEMAND_METRICS, create_price_demand_bubble
+from src.charts.correlation_heatmap import create_correlation_heatmap
 
 # Page configuration
 st.set_page_config(
@@ -68,7 +71,10 @@ with st.sidebar:
         # Yeni eklenen sayfalar
         ("treemap", "Treemap", ":material/account_tree:"),
         ("violin", "Violin Plot", ":material/analytics:"),
-        ("bar", "Top Neighborhoods", ":material/bar_chart:")
+        ("bar", "Top Neighborhoods", ":material/bar_chart:"),
+        ("host_portfolio", "Host Portfolio", ":material/groups:"),
+        ("price_demand", "Price vs Demand", ":material/bubble_chart:"),
+        ("correlation", "Correlation Heatmap", ":material/grid_on:")
     ]
 
     for page_id, label, icon in pages:
@@ -460,3 +466,104 @@ elif st.session_state.page == "bar":
         st.warning("No listings match the selected filters.")
     else:
         st.plotly_chart(create_top_neighborhoods_bar(filtered_df), use_container_width=True)
+
+
+# ----------------------
+# ADDITIONAL VISUALIZATIONS
+# ----------------------
+
+elif st.session_state.page == "host_portfolio":
+    st.title("👥 Host Portfolio Analysis")
+    st.write(
+        "Compare single-listing hosts with small and professional hosts: "
+        "how their prices differ by borough and which room types they offer."
+    )
+
+    if filtered_df.empty:
+        st.warning("No listings match the selected filters.")
+    else:
+        host_summary = summarize_host_types(filtered_df)
+        cols = st.columns(len(host_summary))
+        for col, (_, row) in zip(cols, host_summary.iterrows()):
+            col.metric(
+                row["Host type"],
+                f"{int(row['Listings']):,} listings",
+                f"{row['Share of listings (%)']:.1f}% of total",
+                delta_color="off",
+            )
+
+        st.plotly_chart(create_host_portfolio_chart(filtered_df), width="stretch")
+
+        with st.expander("View host type summary"):
+            st.dataframe(host_summary, width="stretch", hide_index=True)
+
+        st.caption(
+            "Host type is based on how many listings the host has in the full dataset "
+            "(calculated_host_listings_count). Empty heatmap cells mean there are no "
+            "matching listings for that borough and host type."
+        )
+
+elif st.session_state.page == "price_demand":
+    st.title("🫧 Neighbourhood Price vs Demand")
+    st.write(
+        "Each bubble is a neighbourhood. Compare its median price with a demand "
+        "indicator; bubble size shows how many listings it has."
+    )
+
+    col1, col2 = st.columns(2)
+    demand_label = col1.selectbox("Demand metric", list(DEMAND_METRICS))
+    min_listings = col2.slider("Minimum listings per neighbourhood", 1, 100, 10, step=1)
+
+    if filtered_df.empty:
+        st.warning("No listings match the selected filters.")
+    else:
+        fig, neighbourhood_summary = create_price_demand_bubble(
+            filtered_df, demand_label, min_listings
+        )
+        if fig is None:
+            st.warning("No neighbourhood has enough listings. Lower the minimum listings value.")
+        else:
+            st.metric("Neighbourhoods shown", f"{len(neighbourhood_summary):,}")
+            st.plotly_chart(fig, width="stretch")
+
+            with st.expander("View neighbourhood data"):
+                st.dataframe(
+                    neighbourhood_summary.sort_values("listings", ascending=False).rename(
+                        columns={
+                            "neighbourhood_group": "Borough",
+                            "neighbourhood": "Neighbourhood",
+                            "median_price": "Median price ($)",
+                            "demand": f"Avg. {demand_label.lower()}",
+                            "listings": "Listings",
+                        }
+                    ).round(2),
+                    width="stretch",
+                    hide_index=True,
+                )
+
+            st.caption(
+                "Dashed lines mark the median of each axis and split neighbourhoods into "
+                "four quadrants. The price axis is logarithmic. Reviews are a proxy for "
+                "demand; low availability can mean high demand or that the host blocks dates."
+            )
+
+elif st.session_state.page == "correlation":
+    st.title("🔢 Correlation Heatmap")
+    st.write("See how strongly the numeric listing features move together.")
+
+    method = st.radio(
+        "Correlation method",
+        ["spearman", "pearson"],
+        format_func=str.title,
+        horizontal=True,
+    )
+
+    if len(filtered_df) < 3:
+        st.warning("Select filters that include at least three listings.")
+    else:
+        st.plotly_chart(create_correlation_heatmap(filtered_df, method), width="stretch")
+        st.caption(
+            "Values range from -1 (move in opposite directions) to +1 (move together); "
+            "0 means no monotonic/linear relationship. Spearman is rank-based and less "
+            "sensitive to extreme prices. Correlation does not imply causation."
+        )
